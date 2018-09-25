@@ -6,6 +6,7 @@
 //                 Melvin Lee <https://github.com/zyml>
 //                 Arturs Vonda <https://github.com/artursvonda>
 //                 Carlos Bonetti <https://github.com/CarlosBonetti>
+//                 Michael Utz <https://github.com/theutz>
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
 
 export = QueryString;
@@ -19,11 +20,11 @@ declare namespace QueryString {
         encode?: boolean;
         encoder?: (str: string) => any;
         filter?: Array<string | number> | ((prefix: string, value: any) => any);
-        arrayFormat?: 'indices' | 'brackets' | 'repeat';
+        arrayFormat?: "indices" | "brackets" | "repeat";
         indices?: boolean;
         sort?: (a: any, b: any) => number;
         serializeDate?: (d: Date) => string;
-        format?: 'RFC1738' | 'RFC3986';
+        format?: "RFC1738" | "RFC3986";
         encodeValuesOnly?: boolean;
         addQueryPrefix?: boolean;
         allowDots?: boolean;
@@ -43,6 +44,9 @@ declare namespace QueryString {
         ignoreQueryPrefix?: boolean;
     }
 
-    function stringify(obj: any, options?: IStringifyOptions): string;
-    function parse(str: string, options?: IParseOptions): any;
+    function stringify<T = unknown>(
+        obj: T,
+        options?: IStringifyOptions
+    ): string;
+    function parse<T = unknown>(str: string, options?: IParseOptions): T;
 }
