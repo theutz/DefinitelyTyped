@@ -34,11 +34,16 @@ s.transaction().then( ( a ) => t = a );
 interface GUserAttributes {
     id? : number;
     username? : string;
+    email: string;
 }
 
 interface GUserInstance extends Sequelize.Instance<GUserAttributes> {}
-var GUser = s.define<GUserInstance, GUserAttributes>( 'user', { id: Sequelize.INTEGER, username : Sequelize.STRING });
-GUser.create({ id : 1, username : 'one' }).then( ( guser ) => guser.save() );
+const GUser = s.define<GUserInstance, GUserAttributes>('user', {
+    id: Sequelize.INTEGER,
+    username: Sequelize.STRING,
+    email: Sequelize.STRING
+});
+GUser.create({ id : 1, username : 'one', email: 'one@lol.com' }).then((guser) => guser.save());
 
 var schema : Sequelize.DefineAttributes = {
     key : { type : Sequelize.STRING, primaryKey : true },
@@ -933,6 +938,7 @@ User.findAll( { include : [{ all : 'HasMany', attributes : ['name'] }] } );
 User.findAll( { include : [{ all : true }, { model : User, attributes : ['id'] }] } );
 User.findAll( { include : [{ all : 'BelongsTo' }] } );
 User.findAll( { include : [{ all : true }] } );
+User.findAll( { include : [{ nested : true }] } );
 User.findAll( { where : { username : 'barfooz' }, raw : true } );
 User.findAll( { where : { name : 'worker' }, include : [{ model : User, as : 'ToDos' }] } );
 User.findAll( { where : { user_id : 1 }, attributes : ['a', 'b'], include : [{ model : User, attributes : ['c'] }] } );
@@ -954,6 +960,11 @@ User.findAll( { where : s.fn('count', [0, 10]) } );
 User.findAll( { where: s.where(s.fn('lower', s.col('email')), s.fn('lower', 'TEST@SEQUELIZEJS.COM')) } );
 User.findAll( { subQuery: false, include : [User], order : [[User, User, 'numYears', 'c']] } );
 User.findAll( { rejectOnEmpty: true });
+
+User.findAll( { include : [{ association: User.hasOne( Task, { foreignKey : 'userId' } ) }] } );
+User.findAll( { include : [{ association: User.hasMany( Task, { foreignKey : 'userId' } ) }] } );
+User.findAll( { include : [{ association: Task.belongsTo( User, { foreignKey : 'userId' } ) }] } );
+User.findAll( { include : [{ association: User.belongsToMany( User, { through : Task } ) }] } );
 
 User.findAll( { where: { $and:[ { username: "user" }, { theDate: new Date() } ] } } );
 User.findAll( { where: { $or:[ { username: "user" }, { theDate: new Date() } ] } } );
@@ -1055,6 +1066,7 @@ findOrRetVal = User.findOrCreate( { where : { email : 'unique.email.@d.com', com
 findOrRetVal = User.findOrCreate( { where : { objectId : 1 }, defaults : { bool : false } } );
 
 let upsertPromiseNoOptions: Bluebird<boolean> = User.upsert( { id : 42, username : 'doe', foo : s.fn( 'upper', 'mixedCase2' ) } );
+let upsertPromiseWithNonReturningOptions: Bluebird<boolean> = User.upsert( { id : 42, username : 'doe', foo : s.fn( 'upper', 'mixedCase2' ) }, { logging: true } );
 let upsertPromiseReturning: Bluebird<[AnyInstance, boolean]> = User.upsert( { id : 42, username : 'doe', foo : s.fn( 'upper', 'mixedCase2' ) }, { returning: true } );
 let upsertPromiseNotReturning: Bluebird<boolean> = User.upsert( { id : 42, username : 'doe', foo : s.fn( 'upper', 'mixedCase2' ) }, { returning: false } );
 
@@ -1243,11 +1255,11 @@ new Sequelize( 'wat', 'trololo', 'wow', { port : 99999 } );
 new Sequelize( 'localhost', 'wtf', 'lol', { port : 99999 } );
 new Sequelize( 'sequelize', null, null, {
     replication : {
-        read : {
+        read : [{
             host : 'localhost',
             username : 'omg',
             password : 'lol'
-        }
+        }]
     }
 } );
 new Sequelize( {
@@ -1287,7 +1299,7 @@ var testModel = s.define( 'User', {
     theDate : Sequelize.DATE,
     aBool : Sequelize.BOOLEAN
 } );
-var testModel = s.define( 'FrozenUser', {}, { freezeTableName : true } );
+const testFrozenModel = s.define( 'FrozenUser', {}, { freezeTableName : true } );
 s.define( 'UserWithClassAndInstanceMethods', {}, {
     classMethods : { doSmth : function() { return 1; } },
     instanceMethods : { makeItSo : function() { return 2; } }
@@ -1517,6 +1529,13 @@ s.define( 'ScopeMe', {
     }
 } );
 
+// Test convention method used to associate models after creation
+Object.keys(s.models).forEach(modelName => {
+    if (s.models[modelName].associate) {
+        s.models[modelName].associate(s.models);
+    }
+});
+
 // Generic find options
 interface ChairAttributes {
     id: number;
@@ -1525,7 +1544,11 @@ interface ChairAttributes {
 }
 interface ChairInstance extends Sequelize.Instance<ChairAttributes> {}
 
-const Chair = s.define<ChairInstance, ChairAttributes>('chair', {});
+const Chair = s.define<ChairInstance, ChairAttributes>('chair', {
+    id: Sequelize.NUMBER,
+    color: Sequelize.STRING,
+    legs: Sequelize.NUMBER
+});
 
 Chair.findAll({
     where: {
@@ -1714,7 +1737,7 @@ s.define('DefineOptionsIndexesTest', {
     email: {
         allowNull: false,
         type: Sequelize.STRING(255),
-        set: function (val) {
+        set: function (val: any) {
             if (typeof val === "string") {
                 val = val.toLowerCase();
             } else {

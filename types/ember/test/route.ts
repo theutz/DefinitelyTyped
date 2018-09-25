@@ -3,7 +3,9 @@ import Object from '@ember/object';
 import Array from '@ember/array';
 import Ember from 'ember'; // currently needed for Transition
 
-interface Post extends Ember.Object {}
+interface Post extends Ember.Object {
+    title: string;
+}
 
 interface Posts extends Array<Post> {}
 
@@ -91,5 +93,14 @@ class RouteUsingClass extends Route.extend({
 }) {
     beforeModel(this: RouteUsingClass) {
         return 'beforeModel can return anything, not just promises';
+    }
+    intermediateTransitionWithoutModel() {
+        this.intermediateTransitionTo('some-route');
+    }
+    intermediateTransitionWithModel() {
+        this.intermediateTransitionTo('some.other.route', { });
+    }
+    intermediateTransitionWithMultiModel() {
+        this.intermediateTransitionTo('some.other.route', 1, 2, { });
     }
 }

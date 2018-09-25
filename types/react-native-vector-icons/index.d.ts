@@ -3,11 +3,11 @@
 // Definitions by: Kyle Roach <https://github.com/iRoachie>
 //                 Tim Wang <https://github.com/timwangdev>
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
-// TypeScript Version: 2.6
+// TypeScript Version: 2.8
 
 import * as React from 'react';
 import { Icon } from './Icon';
-import { TextProperties } from 'react-native';
+import { TextProps } from 'react-native';
 
 /**
  * Returns your own custom font based on the glyphMap where the key is the icon name
